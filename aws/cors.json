@@ -1,0 +1,9 @@
+[
+  {
+    "AllowedHeaders": ["*"],
+    "AllowedMethods": ["GET", "PUT", "DELETE"],
+    "AllowedOrigins": ["https://yashdahat.github.io"],
+    "ExposeHeaders": [],
+    "MaxAgeSeconds": 3000
+  }
+]

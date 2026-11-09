@@ -1,0 +1,30 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "EveryoneCanReadInviteDataAndWeddingFeed",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": [
+        "arn:aws:s3:::BUCKET-NAME/rsvp/*",
+        "arn:aws:s3:::BUCKET-NAME/messages/*",
+        "arn:aws:s3:::BUCKET-NAME/photos/*",
+        "arn:aws:s3:::BUCKET-NAME/wedding/broadcasts.json"
+      ]
+    },
+    {
+      "Sid": "GuestsCanAddRsvpsMessagesPhotosAndWeddingSignups",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": [
+        "arn:aws:s3:::BUCKET-NAME/rsvp/*",
+        "arn:aws:s3:::BUCKET-NAME/rsvp-log/*",
+        "arn:aws:s3:::BUCKET-NAME/messages/*",
+        "arn:aws:s3:::BUCKET-NAME/photos/*",
+        "arn:aws:s3:::BUCKET-NAME/wedding/subscribers/*"
+      ]
+    }
+  ]
+}

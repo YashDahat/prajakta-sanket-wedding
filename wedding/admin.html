@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Wedding Control Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Marathi&family=Mukta:wght@400;500;700;800&display=swap">
+<style>
+/* Layout: a family control room — connect bar, guest numbers, then two working columns: broadcast composer + guest list */
+:root{--paper:#FFF8EC;--card:#FFFDF6;--ink:#2B1A12;--muted:#6B4A3A;--line:#E6CFAC;--kumkum:#7A1530;--gold:#C8901A;--haldi:#E8A317;--green:#0E6B4A;--wa:#128C4A;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 'Mukta',system-ui,sans-serif}
+button,input,select,textarea{font:inherit}
+:focus-visible{outline:3px solid var(--haldi);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:3px double var(--gold);padding-bottom:12px}
+h1{margin:0;font-family:'Tiro Devanagari Marathi',serif;font-weight:400;color:var(--kumkum);font-size:clamp(26px,4vw,36px)}
+h2{margin:0;font-size:20px}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid2{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.grid2>.card{flex:1 1 420px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label{display:flex;flex-direction:column;gap:4px;font-weight:700;font-size:14px;flex:1 1 200px;min-width:0}
+input,select,textarea{min-height:44px;padding:8px 12px;border-radius:10px;border:1.5px solid #D9BE95;background:#fff;color:var(--ink);width:100%}
+textarea{min-height:110px;resize:vertical;font-size:17px}
+.btn{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid var(--kumkum);background:var(--kumkum);color:#FFF8EC;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--kumkum)}
+.btn.wa{background:var(--wa);border-color:var(--wa)}
+.btn.sm{min-height:36px;padding:0 12px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:default}
+.status{font-weight:700;font-size:14px}
+.ok{color:var(--green)}.err{color:var(--kumkum)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.stat b{display:block;font-size:30px;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--kumkum)}
+.stat span{font-size:13px;color:var(--muted);font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--gold);background:#FFF4DC;border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;text-align:left}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{padding:8px 10px;border-bottom:1px solid #F0E0C6;text-align:left;vertical-align:top}
+th{background:#FBEBD2;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+td.num{font-variant-numeric:tabular-nums}
+.feed{display:flex;flex-direction:column;gap:8px}
+.msg{border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;gap:10px;justify-content:space-between;align-items:flex-start;background:#fff}
+.msg p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.msg time{font-size:12px;color:var(--muted);font-weight:700}
+.walist{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto}
+.waitem{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.waitem.sent{opacity:.6}
+.hint{font-size:14px;color:var(--muted);margin:0}
+details summary{cursor:pointer;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div><h1>लग्न नियंत्रण कक्ष · Control Room</h1><div class="muted">Prajakta ❦ Sanket · guest list and wedding-day announcements</div></div>
+    <a class="btn ghost sm" href="./">Open the guest site ↗</a>
+  </header>
+
+  <section class="card" aria-labelledby="c-h">
+    <div class="row" style="justify-content:space-between;align-items:center"><h2 id="c-h">Connect</h2><span id="connState" class="status" role="status"></span></div>
+    <p class="hint">Use the <b>wedding-admin</b> AWS access key from the setup guide. It can only touch the wedding folder of your bucket. Keys stay on this device.</p>
+    <form class="row" id="connForm">
+      <label>Bucket address<input id="c-base" placeholder="https://BUCKET.s3.ap-south-1.amazonaws.com/" autocomplete="off"></label>
+      <label style="flex:0 1 150px">Region<input id="c-region" value="ap-south-1" autocomplete="off"></label>
+      <label>Access key ID<input id="c-key" autocomplete="off" spellcheck="false"></label>
+      <label>Secret access key<input id="c-secret" type="password" autocomplete="off" spellcheck="false"></label>
+      <label style="flex:0 0 auto;flex-direction:row;align-items:center;gap:8px;font-weight:500"><input id="c-remember" type="checkbox" style="width:20px;min-height:20px" checked> Remember on this phone</label>
+      <button class="btn" type="submit">Connect</button>
+      <button class="btn ghost" type="button" id="forget">Forget keys</button>
+    </form>
+  </section>
+
+  <div class="stats" id="stats" aria-live="polite"></div>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="b-h">
+      <h2 id="b-h">📣 Broadcast</h2>
+      <p class="hint">Posts appear on every open guest site within 30 seconds, with an alert on phones that turned alerts on. Then forward it on WhatsApp below.</p>
+      <div class="chips" id="templates"></div>
+      <label>Message<textarea id="b-text" maxlength="500" placeholder="उदा. हळदीचा कार्यक्रम सुरू झाला आहे! · e.g. The Haldi has started."></textarea></label>
+      <div class="row" style="align-items:center"><button class="btn" id="post" type="button">Post to live feed</button><span id="postState" class="status" role="status"></span></div>
+      <details open><summary>Posted announcements</summary><div class="feed" id="feed" style="margin-top:10px"></div></details>
+    </section>
+
+    <section class="card" aria-labelledby="w-h">
+      <h2 id="w-h">WhatsApp forwarding</h2>
+      <p class="hint">Pick a message, then tap each guest to open WhatsApp with the text ready. Or copy it once and paste into your WhatsApp broadcast list.</p>
+      <label>Message to forward<select id="w-pick"></select></label>
+      <div class="row"><button class="btn ghost sm" id="copyMsg" type="button">Copy message</button><span id="copyState" class="status" role="status"></span></div>
+      <div class="walist" id="walist"></div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="g-h">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <h2 id="g-h">Guest list</h2>
+      <div class="row" style="flex:1 1 320px;justify-content:flex-end">
+        <label style="flex:0 1 260px"><span class="muted" style="font-weight:500">Search</span><input id="q" placeholder="Name or number"></label>
+        <button class="btn ghost sm" id="refresh" type="button">Refresh</button>
+        <button class="btn sm" id="csv" type="button">Download CSV</button>
+      </div>
+    </div>
+    <div class="tbl"><table><thead><tr><th>Name</th><th>WhatsApp</th><th>Side</th><th>Guests</th><th>Events</th><th>Joined</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  </section>
+</div>
+
+<script src="config.js"></script>
+<script src="sigv4.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var EVENTS = { mehendi: 'Mehendi', chuda: 'Gaav Dev & Chuda', haldi: 'Haldi', lagna: 'Wedding' };
+  var SIDES = { bride: 'Bride', groom: 'Groom', both: 'Both' };
+  var TEMPLATES = [
+    'सातारा: मेहेंदी सुरू झाली आहे! · Mehendi has started in Satara.',
+    'गावदेव पूजन सुरू होत आहे · The Gaav Dev puja is starting.',
+    'हळदीचा कार्यक्रम सुरू झाला आहे! · The Haldi has started in Sangli.',
+    'वरात निघाली आहे 🎺 · The varat (groom’s procession) is on its way.',
+    'शुभमुहूर्त जवळ आला आहे — कृपया मंडपात जागा घ्या · The muhurat is near — please take your seats in the mandap.',
+    'शुभमंगल सावधान! 🎉 · Prajakta and Sanket are married!',
+    'भोजन तयार आहे · Lunch is served.'
+  ];
+  var st = { creds: null, subs: [], feed: [] };
+  var ls = { get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) {} }, del: function (k) { try { localStorage.removeItem(k); } catch (e) {} } };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function base() { return st.creds.base.replace(/\/?$/, '/'); }
+  function say(id, cls, text) { var e = $(id); e.className = 'status ' + cls; e.textContent = text; }
+  function fmt(iso) { try { return new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }); } catch (e) { return iso; } }
+  function s3(method, key, body, type) {
+    return S3Sign.fetch(st.creds, method, base() + key, body != null ? { body: body, headers: { 'Content-Type': type || 'application/json' } } : {});
+  }
+
+  // connect form
+  var saved = null; try { saved = JSON.parse(ls.get('pw-admin') || 'null'); } catch (e) {}
+  var cfg = window.LF_WEDDING || {};
+  $('c-base').value = (saved && saved.base) || cfg.bucketBase || '';
+  $('c-region').value = (saved && saved.region) || cfg.region || 'ap-south-1';
+  if (saved) { $('c-key').value = saved.accessKeyId || ''; $('c-secret').value = saved.secretAccessKey || ''; }
+  $('connForm').addEventListener('submit', function (e) { e.preventDefault(); connect(); });
+  $('forget').addEventListener('click', function () { ls.del('pw-admin'); $('c-key').value = ''; $('c-secret').value = ''; st.creds = null; say('connState', '', 'Keys removed from this phone.'); });
+  function connect() {
+    var c = { base: $('c-base').value.trim(), region: $('c-region').value.trim() || 'ap-south-1', accessKeyId: $('c-key').value.trim(), secretAccessKey: $('c-secret').value.trim() };
+    if (!/^https:\/\//.test(c.base) || !c.accessKeyId || !c.secretAccessKey) { say('connState', 'err', 'Fill in the bucket address and both keys.'); return; }
+    st.creds = c;
+    if ($('c-remember').checked) ls.set('pw-admin', JSON.stringify(c)); else ls.del('pw-admin');
+    say('connState', '', 'Connecting…');
+    Promise.all([loadSubs(), loadFeed()]).then(function () { say('connState', 'ok', 'Connected ✓'); })
+      .catch(function (err) { say('connState', 'err', 'Couldn’t connect: ' + err.message + '. Check the keys, region and the bucket’s CORS settings.'); });
+  }
+
+  // subscribers
+  function listKeys(prefix, token) {
+    var q = '?list-type=2&prefix=' + encodeURIComponent(prefix) + (token ? '&continuation-token=' + encodeURIComponent(token) : '');
+    return S3Sign.fetch(st.creds, 'GET', base() + q).then(function (r) {
+      if (!r.ok) throw new Error('list failed (' + r.status + ')');
+      return r.text();
+    }).then(function (xml) {
+      var d = new DOMParser().parseFromString(xml, 'application/xml');
+      var keys = Array.prototype.map.call(d.getElementsByTagName('Key'), function (k) { return k.textContent; });
+      var next = d.getElementsByTagName('NextContinuationToken')[0];
+      return next ? listKeys(prefix, next.textContent).then(function (more) { return keys.concat(more); }) : keys;
+    });
+  }
+  function loadSubs() {
+    return listKeys('wedding/subscribers/').then(function (keys) {
+      return Promise.all(keys.filter(function (k) { return /\.json$/.test(k); }).map(function (k) {
+        return s3('GET', k).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { if (j) j._key = k; return j; }).catch(function () { return null; });
+      }));
+    }).then(function (list) {
+      st.subs = list.filter(Boolean).sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+      renderSubs(); renderStats(); renderWa();
+    });
+  }
+  function renderStats() {
+    var guests = st.subs.reduce(function (n, s) { return n + (+s.guests || 1); }, 0);
+    var per = {}; Object.keys(EVENTS).forEach(function (k) { per[k] = 0; });
+    st.subs.forEach(function (s) { (s.events || []).forEach(function (e) { if (per[e] != null) per[e] += (+s.guests || 1); }); });
+    var sides = { bride: 0, groom: 0, both: 0 }; st.subs.forEach(function (s) { if (sides[s.side] != null) sides[s.side]++; });
+    var tiles = [[st.subs.length, 'Families signed up'], [guests, 'Guests in total'], [sides.bride + ' / ' + sides.groom, 'Bride’s / Groom’s side']]
+      .concat(Object.keys(EVENTS).map(function (k) { return [per[k], 'Expected at ' + EVENTS[k]]; }));
+    $('stats').innerHTML = tiles.map(function (t) { return '<div class="stat"><b>' + t[0] + '</b><span>' + t[1] + '</span></div>'; }).join('');
+  }
+  function renderSubs() {
+    var q = $('q').value.trim().toLowerCase();
+    var rows = st.subs.filter(function (s) { return !q || (s.name || '').toLowerCase().indexOf(q) >= 0 || (s.phone || '').indexOf(q.replace(/\D/g, '') || '~') >= 0; });
+    $('rows').innerHTML = rows.length ? rows.map(function (s) {
+      return '<tr><td>' + esc(s.name) + '</td><td>+' + esc(s.phone) + '</td><td>' + esc(SIDES[s.side] || s.side) + '</td><td class="num">' + esc(s.guests) + '</td><td>' + esc((s.events || []).map(function (e) { return EVENTS[e] || e; }).join(', ')) + '</td><td>' + esc(fmt(s.at)) + '</td><td><button class="btn ghost sm" data-del="' + esc(s._key) + '" type="button">Remove</button></td></tr>';
+    }).join('') : '<tr><td colspan="7" class="muted">' + (st.creds ? 'No guests yet. Share the site link and sign-ups will appear here.' : 'Connect to see the guest list.') + '</td></tr>';
+  }
+  $('q').addEventListener('input', renderSubs);
+  $('refresh').addEventListener('click', function () { if (st.creds) loadSubs().catch(function (e) { say('connState', 'err', e.message); }); });
+  $('rows').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-del]'); if (!b) return;
+    if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Tap again to remove'; return; }
+    s3('DELETE', b.getAttribute('data-del')).then(function () { return loadSubs(); });
+  });
+  $('csv').addEventListener('click', function () {
+    var lines = [['Name', 'WhatsApp', 'Side', 'Guests', 'Events', 'Joined']].concat(st.subs.map(function (s) { return [s.name, '+' + s.phone, SIDES[s.side] || s.side, s.guests, (s.events || []).map(function (e) { return EVENTS[e] || e; }).join('; '), s.at]; }));
+    var csv = '﻿' + lines.map(function (r) { return r.map(function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'wedding-guests.csv'; a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  });
+
+  // broadcasts
+  $('templates').innerHTML = TEMPLATES.map(function (t, i) { return '<button class="chip" type="button" data-t="' + i + '">' + esc(t) + '</button>'; }).join('');
+  $('templates').addEventListener('click', function (e) { var b = e.target.closest('[data-t]'); if (b) { $('b-text').value = TEMPLATES[+b.getAttribute('data-t')]; $('b-text').focus(); } });
+  function loadFeed() {
+    return s3('GET', 'wedding/broadcasts.json').then(function (r) {
+      if (r.status === 404 || r.status === 403) return { messages: [] };
+      if (!r.ok) throw new Error('feed failed (' + r.status + ')');
+      return r.json();
+    }).then(function (j) { st.feed = (j.messages || []).slice().sort(function (a, b) { return a.at < b.at ? 1 : -1; }); renderFeed(); renderWa(); });
+  }
+  function saveFeed() { return s3('PUT', 'wedding/broadcasts.json', JSON.stringify({ messages: st.feed, updated: new Date().toISOString() })).then(function (r) { if (!r.ok) throw new Error('save failed (' + r.status + ')'); }); }
+  function renderFeed() {
+    $('feed').innerHTML = st.feed.length ? st.feed.map(function (m) { return '<div class="msg"><div><time>' + esc(fmt(m.at)) + '</time><p>' + esc(m.text) + '</p></div><button class="btn ghost sm" type="button" data-rm="' + esc(m.id) + '">Delete</button></div>'; }).join('') : '<p class="hint">Nothing posted yet.</p>';
+    var cur = $('w-pick').value;
+    $('w-pick').innerHTML = st.feed.length ? st.feed.map(function (m) { return '<option value="' + esc(m.id) + '">' + esc(fmt(m.at) + ' — ' + m.text.slice(0, 60)) + '</option>'; }).join('') : '<option value="">Post a message first</option>';
+    if (cur && st.feed.some(function (m) { return m.id === cur; })) $('w-pick').value = cur;
+  }
+  $('post').addEventListener('click', function () {
+    var text = $('b-text').value.trim();
+    if (!st.creds) { say('postState', 'err', 'Connect first.'); return; }
+    if (!text) { say('postState', 'err', 'Write a message first.'); return; }
+    $('post').disabled = true; say('postState', '', 'Posting…');
+    loadFeed().then(function () {
+      var m = { id: 'm' + Date.now().toString(36), at: new Date().toISOString(), text: text };
+      st.feed.unshift(m);
+      return saveFeed().then(function () { $('b-text').value = ''; renderFeed(); $('w-pick').value = m.id; renderWa(); say('postState', 'ok', 'Posted ✓ Now forward it on WhatsApp →'); });
+    }).catch(function (e) { say('postState', 'err', 'Couldn’t post: ' + e.message); }).then(function () { $('post').disabled = false; });
+  });
+  $('feed').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-rm]'); if (!b) return;
+    if (b.dataset.armed !== '1') { b.dataset.armed = '1'; b.textContent = 'Tap again to delete'; return; }
+    st.feed = st.feed.filter(function (m) { return m.id !== b.getAttribute('data-rm'); });
+    saveFeed().then(function () { renderFeed(); renderWa(); }).catch(function (err) { say('postState', 'err', err.message); });
+  });
+
+  // whatsapp forwarding
+  function sentKey() { return 'pw-sent-' + ($('w-pick').value || ''); }
+  function renderWa() {
+    var m = st.feed.filter(function (x) { return x.id === $('w-pick').value; })[0];
+    if (!m) { $('walist').innerHTML = '<p class="hint">Post a message, then it shows up here to forward.</p>'; return; }
+    var sent = {}; try { sent = JSON.parse(ls.get(sentKey()) || '{}') || {}; } catch (e) {}
+    var text = m.text + '\n\n— Prajakta ❦ Sanket · ' + location.href.replace(/admin\.html.*$/, '');
+    $('walist').innerHTML = st.subs.length ? st.subs.map(function (s) {
+      var href = 'https://wa.me/' + encodeURIComponent(s.phone) + '?text=' + encodeURIComponent(text);
+      return '<div class="waitem' + (sent[s.phone] ? ' sent' : '') + '"><span><b>' + esc(s.name) + '</b><br><span class="muted">+' + esc(s.phone) + '</span></span><a class="btn wa sm" target="_blank" rel="noopener" data-sent="' + esc(s.phone) + '" href="' + href + '">' + (sent[s.phone] ? 'Sent ✓ again' : 'Send on WhatsApp') + '</a></div>';
+    }).join('') : '<p class="hint">No guests signed up yet.</p>';
+  }
+  $('w-pick').addEventListener('change', renderWa);
+  $('walist').addEventListener('click', function (e) {
+    var a = e.target.closest('[data-sent]'); if (!a) return;
+    var sent = {}; try { sent = JSON.parse(ls.get(sentKey()) || '{}') || {}; } catch (err) {}
+    sent[a.getAttribute('data-sent')] = 1; ls.set(sentKey(), JSON.stringify(sent));
+    setTimeout(renderWa, 300);
+  });
+  $('copyMsg').addEventListener('click', function () {
+    var m = st.feed.filter(function (x) { return x.id === $('w-pick').value; })[0]; if (!m) return;
+    var text = m.text + '\n\n— Prajakta ❦ Sanket';
+    try { navigator.clipboard.writeText(text).then(function () { say('copyState', 'ok', 'Copied ✓'); }, function () { say('copyState', 'err', 'Copy blocked — select the text in the feed instead.'); }); } catch (e) { say('copyState', 'err', 'Copy blocked.'); }
+  });
+
+  renderStats(); renderSubs(); renderFeed(); renderWa();
+  if (saved && saved.accessKeyId) connect();
+})();
+</script>
+</body>
+</html>
